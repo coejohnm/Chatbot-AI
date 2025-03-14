@@ -11,23 +11,27 @@ import time
 
 app = Flask(__name__)
 
-# Use environment variable for API key
+# Load OpenAI API Key from environment variable
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
+# Store conversation history
 conversation_history = [
     {"role": "system", "content": "You are a professional mental health advisor. Provide advice in fluent Chinese to help users relieve anxiety."}
 ]
 
 @app.route('/')
 def index():
+    """Serve the HTML UI."""
     return render_template('index.html')
 
 @app.route('/chat', methods=['POST'])
 def chat():
+    """Handle user input, call OpenAI API, and return AI response with streaming."""
     user_input = request.json.get("message")
     conversation_history.append({"role": "user", "content": user_input})
 
+    # Limit conversation history to 10 messages
     if len(conversation_history) > 10:
         conversation_history.pop(1)
 
@@ -36,12 +40,12 @@ def chat():
             response = client.chat.completions.create(
                 model="gpt-4-turbo",
                 messages=conversation_history,
-                stream=True  # Enable streaming
+                stream=True  # Enable streaming response
             )
             for chunk in response:
-                if chunk.choices[0].delta.get("content"):
-                    yield chunk.choices[0].delta["content"]  # Send chunked text
-                    time.sleep(0.05)  # Add slight delay for smooth typing effect
+                if hasattr(chunk.choices[0].delta, "content"):  # Ensure content exists
+                    yield chunk.choices[0].delta.content  # Send streamed text
+                    time.sleep(0.05)  # Small delay for smooth typing effect
         except Exception as e:
             yield f"Error: {str(e)}"
 
