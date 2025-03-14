@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            text-align: center;
+        }
+        #chatbox {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 400px;
+            overflow-y: scroll;
+            text-align: left;
+        }
+        .message {
+            margin: 5px 0;
+        }
+        .user {
+            font-weight: bold;
+            color: blue;
+        }
+        .bot {
+            font-weight: bold;
+            color: green;
+        }
+        #user-input {
+            width: 80%;
+            padding: 8px;
+        }
+        button {
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>AI Chatbot</h2>
+    <div id="chatbox"></div>
+    
+    <input type="text" id="user-input" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        function sendMessage() {
+            var userMessage = $("#user-input").val();
+            if (userMessage.trim() === "") return;
+
+            $("#chatbox").append("<div class='message user'>You: " + userMessage + "</div>");
+            $("#user-input").val("");
+
+            $.ajax({
+                url: "/chat",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({message: userMessage}),
+                success: function(response) {
+                    $("#chatbox").append("<div class='message bot'>Bot: " + response.response + "</div>");
+                    $("#chatbox").scrollTop($("#chatbox")[0].scrollHeight);
+                },
+                error: function() {
+                    $("#chatbox").append("<div class='message bot'>Bot: Error communicating with the server.</div>");
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
